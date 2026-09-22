@@ -1,23 +1,25 @@
 package codec;
 
+import bitio.BitWriter;
 import core.HuffmanDecoder;
 import core.HuffmanEncoder;
 import core.HuffmanNode;
 import model.CodeTable;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 public class HuffmanCodec implements Codec{
 
 
     @Override
-    public byte[] compress(byte[] rawData, CodeTable codeTable) {
-
-        HuffmanEncoder huffmanEncoder = new HuffmanEncoder(codeTable);
-        return huffmanEncoder.encode(rawData);
+    public void encodeChunk(byte[] rawData, CodeTable codeTable,BitWriter bitWriter) throws IOException {
+        new HuffmanEncoder(codeTable).encodeChunk(rawData, bitWriter);
     }
 
     @Override
-    public byte[] decompress(byte[] compressedData, HuffmanNode treeRoot,int paddingBits) {
-        HuffmanDecoder huffmanDecoder = new HuffmanDecoder(treeRoot);
-        return huffmanDecoder.decode(compressedData,paddingBits);
+    public void decompress(InputStream in, OutputStream out,HuffmanNode treeRoot, int paddingBits,long compressedBytes) throws IOException {
+        new HuffmanDecoder(treeRoot).decode(in, out, paddingBits, compressedBytes);
     }
 }

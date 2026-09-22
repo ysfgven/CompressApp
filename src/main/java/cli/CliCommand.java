@@ -2,10 +2,10 @@ package cli;
 
 public class CliCommand {
 
-    private String inputFilePath;
-    private String outputFilePath;
-    private Mode mode;
-    private int chunkSizeMB;
+    private final String inputFilePath;
+    private final String outputFilePath;
+    private final Mode mode;
+    private final int chunkSizeMB;
 
     public enum Mode {
         COMPRESS,
@@ -17,5 +17,21 @@ public class CliCommand {
         this.outputFilePath = outputFilePath;
         this.mode = mode;
         this.chunkSizeMB = chunkSizeMB;
+    }
+
+    public String getInputFilePath() {
+        return inputFilePath;
+    }
+
+    public String getOutputFilePath() {
+        return outputFilePath;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public int getChunkSizeMB() {
+        return chunkSizeMB;
     }
 }

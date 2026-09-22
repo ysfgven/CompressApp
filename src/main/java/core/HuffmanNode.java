@@ -2,8 +2,8 @@ package core;
 
 public class HuffmanNode implements Comparable<HuffmanNode>{
 
-    private byte symbol;
-    private int frequency;
+    private final byte symbol;
+    private final int frequency;
     private HuffmanNode left;
     private HuffmanNode right;
 

@@ -14,7 +14,7 @@ public class HuffmanTreeBuilder {
         while(priorityQueue.size()>1){
             HuffmanNode left = priorityQueue.poll();
             HuffmanNode right = priorityQueue.poll();
-            int combinedFreq = left.getFrequency()+right.getFrequency();
+            int combinedFreq = left.getFrequency()+right.getFrequency(); //todo:will check this later it might be potential npe
             HuffmanNode parent = new HuffmanNode((byte)0,combinedFreq,left,right);
             priorityQueue.add(parent);
         }

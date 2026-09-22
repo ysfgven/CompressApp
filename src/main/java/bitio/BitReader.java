@@ -2,34 +2,29 @@ package bitio;
 
 import exception.DecompressionException;
 
-public class BitReader {
-    private byte[] data;
-    private int byteIndex;
-    private int bitIndex;
+import java.io.IOException;
+import java.io.InputStream;
 
-    public BitReader(byte[] data) {
-        this.data = data;
+public class BitReader {
+    private final InputStream in;
+    private int currentByte;
+    private int bitIndex = 8;
+
+    public BitReader(InputStream in) {
+        this.in = in;
     }
 
 
-    public int readBit(){
-        int bit = (data[byteIndex] >> (7 - bitIndex)) & 1;
-        bitIndex++;
-        if (byteIndex >= data.length) {
-            throw new DecompressionException("An error occurred while reading bits!");
-        }
-        if(bitIndex ==8){
-            byteIndex++;
+    public int readBit() throws IOException {
+        if (bitIndex == 8) {
+            int read = in.read();
+            if (read == -1) {
+                throw new DecompressionException("Compressed stream ended unexpectedly");
+            }
+            currentByte = read;
             bitIndex = 0;
         }
-
-        return bit;
-
-    }
-
-    public boolean hasMore(int paddingBits){
-                //totalBit                    > bits done reading
-        return ((data.length * 8)-paddingBits)>((byteIndex * 8) + bitIndex);
+        return (currentByte >> (7-bitIndex++))&1;
     }
 
 }

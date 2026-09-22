@@ -11,83 +11,57 @@ import java.util.Map;
 
 public class HuffFileFormat {
 
-    public void writeHeader(FileHeader header, OutputStream out){
-
+    public void writeHeader(FileHeader header, OutputStream out) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
-        try{
-            dos.write(header.getMagicNum());
-            dos.writeShort(header.getVersion());
+        dos.write(header.getMagicNum());
+        dos.writeShort(header.getVersion());
+        dos.writeLong(header.getOriginalFileSize());
 
-            dos.writeLong(header.getOriginalFileSize());
+        byte[] nameBytes = header.getOriginalFileName().getBytes(StandardCharsets.UTF_8);
+        dos.writeInt(nameBytes.length);
+        dos.write(nameBytes);
+        dos.writeLong(header.getCompressedDataSize());
+        dos.writeByte(header.getPaddingBits());
+        dos.writeInt(header.getFrequencyTable().size());
 
-            byte[] fileNameBytes = header.getOriginalFileName().getBytes(StandardCharsets.UTF_8);//to ensure no language problem
-            dos.writeInt(fileNameBytes.length);
-            dos.write(fileNameBytes);
-
-            dos.writeLong(header.getCompressedDataSize());
-
-            dos.writeByte(header.getPaddingBits());
-
-            dos.writeInt(header.getFrequencyTable().size());
-            for (Map.Entry<Byte, Integer> entry : header.getFrequencyTable().entrySet()) {
-                dos.writeByte(entry.getKey());
-                dos.writeInt(entry.getValue());
-            }
-
-            dos.flush();
-        }catch (IOException e) {
-            System.out.println("error");//todo:will code later
+        for (Map.Entry<Byte,Integer> e : header.getFrequencyTable().entrySet()) {
+            dos.writeByte(e.getKey());
+            dos.writeInt(e.getValue());
         }
 
-
+        dos.flush();
     }
 
-    public FileHeader readHeader(InputStream in) throws IOException{
+    public FileHeader readHeader(InputStream in) throws IOException {
         DataInputStream dis = new DataInputStream(in);
-        FileHeader fileHeader = new FileHeader();
-
+        FileHeader header = new FileHeader();
         try {
-
-            //checking signatures
             byte[] magic = dis.readNBytes(4);
-            if(!Arrays.equals(magic,FileHeader.MAGIC_NUMBER)){
-                throw new InvalidFormatException(InvalidFormatException.Reason.MAGIC_NUMBER,"Expected HUFF, got: \"" + Arrays.toString(magic));
+            if (!Arrays.equals(magic, FileHeader.MAGIC_NUMBER)) {
+                throw new InvalidFormatException(InvalidFormatException.Reason.MAGIC_NUMBER, "HUFF is missing it got: " + Arrays.toString(magic));
             }
-            fileHeader.setMagicNum(magic);
-
-            short version = dis.readShort();
-            if(version != FileHeader.CURRENT_VERSION) {
-                throw new InvalidFormatException(InvalidFormatException.Reason.UNSUPPORTED_VERSION, "Version " + version + " not supported");
+            header.setMagicNum(magic);
+            short ver = dis.readShort();
+            if (ver != FileHeader.CURRENT_VERSION) {
+                throw new InvalidFormatException(InvalidFormatException.Reason.UNSUPPORTED_VERSION, "Version " + ver + " unsupported");
             }
-            fileHeader.setVersion(version);
-            //adding original file size
-            fileHeader.setOriginalFileSize(dis.readLong());
-
-            //for name
-            int size = dis.readInt();
-            byte[] fileNameBytes = dis.readNBytes(size);
-            String fileName = new String(fileNameBytes, StandardCharsets.UTF_8);
-            fileHeader.setOriginalFileName(fileName);
-            //adding compressed data size
-            fileHeader.setCompressedDataSize(dis.readLong());
-            //adding padding bits to object
-            fileHeader.setPaddingBits(dis.readByte());
-
-            //to read map
+            header.setVersion(ver);
+            header.setOriginalFileSize(dis.readLong());
+            int nameLen = dis.readInt();
+            header.setOriginalFileName(new String(dis.readNBytes(nameLen), StandardCharsets.UTF_8));
+            header.setCompressedDataSize(dis.readLong());
+            header.setPaddingBits(dis.readUnsignedByte());
             int mapSize = dis.readInt();
+
             Map<Byte,Integer> freqMap = new HashMap<>();
             for (int i = 0; i < mapSize; i++) {
-                byte key = dis.readByte();
-                int value = dis.readInt();
-                freqMap.put(key,value);
+                freqMap.put(dis.readByte(), dis.readInt());
             }
-            fileHeader.setFrequencyTable(freqMap);
-        } catch (EOFException e) {
-            throw new InvalidFormatException(InvalidFormatException.Reason.CORRUPTED_HEADER, "Header unexpectedly incomplete");
-        } catch (IOException e) {
-            throw new InvalidFormatException(InvalidFormatException.Reason.CORRUPTED_HEADER, "Failed to read header: " + e.getMessage());
+            header.setFrequencyTable(freqMap);
+        }catch(EOFException e){
+            throw new InvalidFormatException(InvalidFormatException.Reason.CORRUPTED_HEADER,"Header is missin");
         }
 
-        return fileHeader;
+        return header;
     }
 }

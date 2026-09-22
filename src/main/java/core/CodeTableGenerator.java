@@ -1,20 +1,25 @@
 package core;
 
+import model.CodeTable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class CodeTableGenerator {
 
 
-    public Map<Byte,String> generate(HuffmanNode root){
-        Map<Byte,String> codeTable = new HashMap<>();
-        if(root == null) return codeTable;
-        if(root.isLeaf()){
-            codeTable.put(root.getSymbol(),"0");
-            return codeTable;
+    public CodeTable generate(HuffmanNode root) {
+        Map<Byte, String> codeMap = new HashMap<>();
+        if (root == null)
+            return new CodeTable(codeMap);
+
+        if (root.isLeaf()) {
+            codeMap.put(root.getSymbol(),"0");
+            return new CodeTable(codeMap);
         }
-        dfs(root,"",codeTable);
-        return codeTable;
+
+        dfs(root, "", codeMap);
+        return new CodeTable(codeMap);
     }
     private void dfs(HuffmanNode node,String currentCode,Map<Byte,String> codeTable){
         if(node == null) return;

@@ -1,38 +1,44 @@
 package core;
 
 import bitio.BitReader;
-
-import java.io.ByteArrayOutputStream;
+import exception.DecompressionException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class HuffmanDecoder {
-    private HuffmanNode root;
+    private final HuffmanNode root;
 
     public HuffmanDecoder(HuffmanNode root) {
         this.root = root;
     }
 
-    public byte[] decode(byte[] compressedData, int paddingBits) {
-        BitReader bitReader = new BitReader(compressedData);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+    public void decode(InputStream in, OutputStream out,int paddingBits,long compressedBytes) throws IOException {
 
-        HuffmanNode current = root;
+        if (compressedBytes == 0) {
+            return;
+        }
 
-        int totalBits = (compressedData.length * 8) - paddingBits;
-
-        for (int i = 0; i < totalBits; i++) {
-            int bit = bitReader.readBit();
-            if (bit == 0) {
-                current = current.getLeft();
-            }else{
-                current = current.getRight();
+        BitReader br = new BitReader(in);
+        long totalBits = (compressedBytes * 8L) - paddingBits;
+        if (root.isLeaf()) {
+            for (long i = 0; i < totalBits; i++) {
+                br.readBit();
+                out.write(root.getSymbol() & 0xFF);
             }
-
+            return;
+        }
+        HuffmanNode current = root;
+        for (long i = 0; i < totalBits; i++) {
+            int bit = br.readBit();
+            current = (bit == 0) ? current.getLeft() : current.getRight();
+            if (current == null) {
+                throw new DecompressionException("Error: null node" + i);
+            }
             if (current.isLeaf()) {
-                out.write(current.getSymbol());
+                out.write(current.getSymbol() & 0xFF);
                 current = root;
             }
         }
-        return out.toByteArray();
     }
-
 }

@@ -1,5 +1,6 @@
 package format;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class FileHeader {
@@ -14,6 +15,16 @@ public class FileHeader {
     private Map<Byte,Integer> frequencyTable;
     private int paddingBits;
     private long compressedDataSize;
+
+    public FileHeader() {}
+
+    public FileHeader(String originalFileName, long originalFileSize,Map<Byte,Integer> frequencyTable) {
+        this.originalFileName = originalFileName;
+        this.originalFileSize = originalFileSize;
+        this.frequencyTable = frequencyTable;
+    }
+
+
 
     public short getVersion() {
         return version;
@@ -42,8 +53,14 @@ public class FileHeader {
     public long getCompressedDataSize() {
         return compressedDataSize;
     }
-    public int getOriginalFileNameLenght(){
-        return originalFileName.length();
+    public int getOriginalFileNameByteLength() {
+        return originalFileName.getBytes(StandardCharsets.UTF_8).length;
+    }
+    public long getCompressedDataSizeOffset() {
+        return 18L + getOriginalFileNameByteLength();
+    }
+    public long getPaddingBitsOffset() {
+        return 26L + getOriginalFileNameByteLength();
     }
 
     public void setMagicNum(byte[] magicNum) {

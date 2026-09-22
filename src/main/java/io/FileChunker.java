@@ -13,8 +13,8 @@ import java.util.NoSuchElementException;
 
 public class FileChunker implements Iterable<byte[]> {
 
-    private File file;
-    private int chunkSize;
+    private final File file;
+    private final int chunkSize;
 
     public FileChunker(File file, int chunkSize) {
         this.file = file;

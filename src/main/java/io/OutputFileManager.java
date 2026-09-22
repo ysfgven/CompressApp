@@ -5,12 +5,13 @@ import exception.CompressionException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public class OutputFileManager {
-    private File outputPath;
-    private File tempFile;
+    private final File outputPath;
+    private final File tempFile;
 
     public OutputFileManager(File outputPath) {
         this.outputPath = resolveConflict(outputPath);
@@ -42,14 +43,19 @@ public class OutputFileManager {
         return tempFile;
 
     }
-    public void commit(){
-        if(tempFile.exists()){
-            try {
-                Files.move(tempFile.toPath(), outputPath.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException e) {
-                rollback();
-                throw new CompressionException("An error occurred in temp file -> compressed file phase",e);
+    public void commit() {
+        if (!tempFile.exists()) {
+            return;
+        }
+        try {
+            try{
+                Files.move(tempFile.toPath(), outputPath.toPath(),StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            }catch(AtomicMoveNotSupportedException e) {
+                Files.move(tempFile.toPath(), outputPath.toPath(),StandardCopyOption.REPLACE_EXISTING);
             }
+        }catch(IOException e) {
+            rollback();
+            throw new CompressionException("Output file couldnt finish", e);
         }
     }
     public void rollback(){
@@ -83,5 +89,9 @@ public class OutputFileManager {
         }
 
         return newFile;
+    }
+
+    public File getOutputPath() {
+        return outputPath;
     }
 }
