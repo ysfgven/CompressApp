@@ -130,5 +130,3 @@ java -cp out CompressionApp -d -i output.huff
 ---
 ## Roadmap
 - [ ] Tests
-
-- [ ] Tests
