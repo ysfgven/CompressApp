@@ -11,6 +11,7 @@ target/
 build/
 out/
 bin/
+META-INF/
 
 # Maven
 .mvn/
